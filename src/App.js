@@ -44,13 +44,21 @@ function App() {
     if (tagName === emptyTagNamePlaceholder) {
       indexOfCurrentTag = tags.findIndex(stateTag => stateTag.name === '')
     }
-    console.log(indexOfCurrentTag, tagContent)
-    setTags([
-      ...tags.slice(0, indexOfCurrentTag),
-      {
+    const getUpdatedTag = () => {
+      if (tags[indexOfCurrentTag].selected) {
+        return {
+          ...tags[indexOfCurrentTag],
+          selected: false,
+        }
+      }
+      return {
         ...tags[indexOfCurrentTag],
         selected: true,
-      },
+      }
+    }
+    setTags([
+      ...tags.slice(0, indexOfCurrentTag),
+      getUpdatedTag(),
       ...tags.slice(indexOfCurrentTag + 1),
     ])
   }
