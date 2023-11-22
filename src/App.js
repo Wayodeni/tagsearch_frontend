@@ -26,9 +26,14 @@ function App() {
         throw response
       })
       .then((searchResponse) => {
-        setTags(searchResponse.tags?.sort((a, b) => b.documentCount - a.documentCount));
+        updateTags(searchResponse.tags?.sort((a, b) => b.documentCount - a.documentCount))
         setDocuments(searchResponse.documents)
       })
+  }
+
+  const updateTags = (foundTags) => {
+    let selectedTagNames = tags?.map(tag => tag.selected ? tag.name : undefined).filter(tag => tag)
+    setTags(foundTags?.map(tag => selectedTagNames?.includes(tag.name) ? {...tag, selected: true} : tag))
   }
 
   const handleSearchbarChange = (query) => {
@@ -86,7 +91,7 @@ function App() {
           <Chip  key={document.id} label={`${document.name ? document.name : ("Документ без названия")}`} size="small" variant="outlined"/>
           <Typography align={'justify'}>{document.body}</Typography>
           <Box sx={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
-            {document.tags?.map((tag) => <Chip label={tag.name + ` (${tags.find(stateTag => stateTag.name == tag.name)?.documentCount})`} size="small" />)}
+            {document.tags?.map((tag) => <Chip onClick={e => handleTagClick(e.target.innerText)} color={tags.find(stateTag => stateTag.name === tag.name)?.selected ? 'success' : 'default'} label={tag.name + ` (${tags.find(stateTag => stateTag.name == tag.name)?.documentCount})`} size="small" />)}
           </Box>
         </Box>
       )}
