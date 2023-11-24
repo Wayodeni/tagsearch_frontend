@@ -9,14 +9,16 @@ import Typography from "@mui/material/Typography";
 
 function App() {
   const [tags, setTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [query, setQuery] = useState('');
 
   const emptyTagNamePlaceholder = "Без тегов";
 
-  useEffect(() => fetchSearchResults(""), []);
+  useEffect(() => fetchSearchResults(), [query, selectedTags])
 
-  const fetchSearchResults = (FTSQuery) => {
-    fetch(`http://localhost:8080/api/v1/search?query=${FTSQuery}`, {
+  const fetchSearchResults = () => {
+    fetch(`http://localhost:8080/api/v1/search?${query != '' ? 'query=' + query : ''}${getTagQueryparams(tags?.filter(tag => tag.selected))}`, {
       method: "GET",
     })
       .then((response) => {
@@ -26,17 +28,20 @@ function App() {
         throw response;
       })
       .then((searchResponse) => {
-        console.log("Поисковый запрос: ", FTSQuery)
-        setTags(getUpdatedTags(searchResponse.tags).sort((a, b) => b.documentCount - a.documentCount));
+        console.log("Поисковый запрос: ", query)
+        setTags(getUpdatedTags(searchResponse.tags).sort((a, b) => b.documentCount - a.documentCount || a.name.localeCompare(b.name)));
         setDocuments(searchResponse.documents);
       });
   };
 
-  const getUpdatedTags = (foundTags) => {
-    let selectedTags = tags
-      ?.map((tag) => (tag.selected ? tag : undefined))
-      .filter((tag) => tag);
+  const getTagQueryparams = (tags) => {
+    let queryString = ''
+    tags?.map(tag => queryString += `&tags[]=${tag.name}`)
+    return queryString
+  }
 
+  const getUpdatedTags = (foundTags) => {
+    let selectedTags = tags?.map((tag) => (tag.selected ? tag : undefined)).filter((tag) => tag)
     if (foundTags === undefined) {
       console.log("foundTags===undefined")
       return selectedTags?.map(tag => ({...tag, documentCount: 0}))
@@ -93,6 +98,7 @@ function App() {
       getUpdatedTag(),
       ...tags.slice(indexOfCurrentTag + 1),
     ]);
+    setSelectedTags(tags?.filter(tag => tag.selected))
   };
 
   return (
@@ -101,7 +107,7 @@ function App() {
         id="outlined-basic"
         label="Поисковый запрос"
         variant="outlined"
-        onChange={(e) => fetchSearchResults(e.target.value)}
+        onChange={(e) => setQuery(e.target.value)}
         sx={{ width: "100%" }}
       />
       <Typography>
