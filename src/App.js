@@ -27,38 +27,47 @@ function App() {
       })
       .then((searchResponse) => {
         console.log("Поисковый запрос: ", FTSQuery)
-        updateTags(
-          searchResponse.tags?.sort((a, b) => b.documentCount - a.documentCount)
-        );
+        setTags(getUpdatedTags(searchResponse.tags).sort((a, b) => b.documentCount - a.documentCount));
         setDocuments(searchResponse.documents);
       });
   };
 
-  const updateTags = (foundTags) => {
+  const getUpdatedTags = (foundTags) => {
     let selectedTags = tags
       ?.map((tag) => (tag.selected ? tag : undefined))
       .filter((tag) => tag);
 
     if (foundTags === undefined) {
       console.log("foundTags===undefined")
-      setTags(selectedTags?.map(tag => ({...tag, documentCount: 0})))
-      return
+      return selectedTags?.map(tag => ({...tag, documentCount: 0}))
     }
 
     console.log('Найденные теги:', foundTags, 'Выбранные теги:', selectedTags);
 
     if (selectedTags?.length > 0) {
-      let selectedInFound = selectedTags?.map((selectedTag) =>
-        foundTags?.find((tag) => tag.name === selectedTag.name)
-      );
-      let foundWithoutSelected = foundTags?.filter(foundTag => !selectedInFound.includes(foundTag))
-      selectedInFound = selectedInFound.map(tag => ({...tag, selected: true}))
+      let selectedInFound = selectedTags?.map((selectedTag) => foundTags?.find((tag) => tag.name === selectedTag.name)).filter(tag => tag);
       console.log('Выбранные в найденных: ', selectedInFound);
-      setTags(foundWithoutSelected?.concat(selectedInFound));
-      return
+
+      let selectedThatAreNotInFound = selectedTags?.map((selectedTag) => {
+        let selectedTagFoundInFoundTags = foundTags?.find((tag) => tag.name === selectedTag.name)
+        if (selectedTagFoundInFoundTags === undefined) {
+          return ({...selectedTag, documentCount: 0})
+        }
+      }).filter(tag => tag);
+      console.log('Выбранные, которых нет в найденных: ', selectedThatAreNotInFound);
+
+      let foundWithoutSelected = foundTags?.filter(foundTag => !selectedInFound.includes(foundTag))
+      console.log('Найденные без выбранных: ', foundWithoutSelected);
+
+      let selectedInFoundWithSelectedDefined = selectedInFound.map(tag => ({...tag, selected: true}))
+      console.log('Выбранные в найденных с добавленным selected: ', selectedInFoundWithSelectedDefined);
+
+      let foundWithSelected = foundWithoutSelected?.concat(selectedThatAreNotInFound).concat(selectedInFoundWithSelectedDefined)
+
+      return foundWithSelected
     }
-    
-    setTags(foundTags);
+
+    return foundTags;
   };
 
   const handleTagClick = (tag) => {
