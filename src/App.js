@@ -15,8 +15,8 @@ function App() {
 
   useEffect(() => fetchSearchResults(""), []);
 
-  const fetchSearchResults = (query) => {
-    fetch(`http://localhost:8080/api/v1/search?query=${query}`, {
+  const fetchSearchResults = (FTSQuery) => {
+    fetch(`http://localhost:8080/api/v1/search?query=${FTSQuery}`, {
       method: "GET",
     })
       .then((response) => {
@@ -26,6 +26,7 @@ function App() {
         throw response;
       })
       .then((searchResponse) => {
+        console.log("Поисковый запрос: ", FTSQuery)
         updateTags(
           searchResponse.tags?.sort((a, b) => b.documentCount - a.documentCount)
         );
@@ -34,14 +35,30 @@ function App() {
   };
 
   const updateTags = (foundTags) => {
-    let selectedTagNames = tags
-      ?.map((tag) => (tag.selected ? tag.name : undefined))
+    let selectedTags = tags
+      ?.map((tag) => (tag.selected ? tag : undefined))
       .filter((tag) => tag);
-    setTags(
-      foundTags?.map((tag) =>
-        selectedTagNames?.includes(tag.name) ? { ...tag, selected: true } : tag
-      )
-    );
+
+    if (foundTags === undefined) {
+      console.log("foundTags===undefined")
+      setTags(selectedTags?.map(tag => ({...tag, documentCount: 0})))
+      return
+    }
+
+    console.log('Найденные теги:', foundTags, 'Выбранные теги:', selectedTags);
+
+    if (selectedTags?.length > 0) {
+      let selectedInFound = selectedTags?.map((selectedTag) =>
+        foundTags?.find((tag) => tag.name === selectedTag.name)
+      );
+      let foundWithoutSelected = foundTags?.filter(foundTag => !selectedInFound.includes(foundTag))
+      selectedInFound = selectedInFound.map(tag => ({...tag, selected: true}))
+      console.log('Выбранные в найденных: ', selectedInFound);
+      setTags(foundWithoutSelected?.concat(selectedInFound));
+      return
+    }
+    
+    setTags(foundTags);
   };
 
   const handleTagClick = (tag) => {
