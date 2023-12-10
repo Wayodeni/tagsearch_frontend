@@ -11,6 +11,7 @@ function App() {
   const [tags, setTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [documentsFound, setDocumentsFound] = useState(0);
   const [query, setQuery] = useState('');
 
   const emptyTagNamePlaceholder = "Без тегов";
@@ -18,7 +19,7 @@ function App() {
   useEffect(() => fetchSearchResults(), [query, selectedTags])
 
   const fetchSearchResults = () => {
-    fetch(`http://localhost:8080/api/v1/search?${query != '' ? 'query=' + query : ''}${getTagQueryparams(tags?.filter(tag => tag.selected))}`, {
+    fetch(`http://192.168.12.22:8080/api/v1/search?${query != '' ? 'query=' + query : ''}${getTagQueryparams(tags?.filter(tag => tag.selected))}`, {
       method: "GET",
     })
       .then((response) => {
@@ -29,6 +30,7 @@ function App() {
       })
       .then((searchResponse) => {
         console.log("Поисковый запрос: ", query)
+        setDocumentsFound(searchResponse.documentsFound)
         setTags(getUpdatedTags(searchResponse.tags).sort((a, b) => b.documentCount - a.documentCount || a.name.localeCompare(b.name)));
         setDocuments(searchResponse.documents);
       });
@@ -111,7 +113,7 @@ function App() {
         sx={{ width: "100%" }}
       />
       <Typography>
-        Найдено документов: {documents?.length} Тегов: {tags?.length}
+        Найдено документов: {documentsFound} Тегов: {tags?.length}
       </Typography>
       <Box
         sx={{
