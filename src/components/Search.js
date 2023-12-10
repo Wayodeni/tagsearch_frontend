@@ -4,20 +4,38 @@ import TextField from "@mui/material/TextField";
 import Chip from "@mui/material/Chip";
 import { useState, useEffect } from "react";
 import Typography from "@mui/material/Typography";
+import { useSearchParams } from 'react-router-dom';
 
 const Search = () => {
     const [tags, setTags] = useState([]);
-    const [selectedTags, setSelectedTags] = useState([]);
+    // const [selectedTags, setSelectedTags] = useState([]);
     const [documents, setDocuments] = useState([]);
     const [documentsFound, setDocumentsFound] = useState(0);
-    const [query, setQuery] = useState('');
-  
+    const [searchParams, setSearchParams] = useSearchParams();
     const emptyTagNamePlaceholder = "Без тегов";
   
-    useEffect(() => fetchSearchResults(), [query, selectedTags])
+    // useEffect(() => setSelectedTags(prevState => {
+    //   let selectedTags = tags?.filter(tag => tag.selected)
+    //   console.log("the selected tags: ===================", selectedTags)
+    //   if ((JSON.stringify(prevState) !== JSON.stringify(selectedTags)) && selectedTags) {
+    //     return selectedTags
+    //   }
+    //   console.log("the prev state tags: ===================", prevState)
+    //   return prevState
+    // }), [tags])
+    // useEffect(() => setSearchParams(params => {
+    //   if (selectedTags.length > 0) {
+    //     params.delete("tags[]")
+    //     selectedTags.map(tag => {
+    //       params.append("tags[]", tag.name)
+    //     })
+    //   }
+    //   return params
+    // }), [selectedTags])
+    useEffect(() => {fetchSearchResults()}, [searchParams])
   
     const fetchSearchResults = () => {
-      fetch(`http://192.168.12.22:8080/api/v1/search?${query !== '' ? 'query=' + query : ''}${getTagQueryparams(tags?.filter(tag => tag.selected))}`, {
+      fetch(`http://192.168.12.22:8080/api/v1/search?${searchParams.toString()}`, {
         method: "GET",
       })
         .then((response) => {
@@ -27,18 +45,12 @@ const Search = () => {
           throw response;
         })
         .then((searchResponse) => {
-          console.log("Поисковый запрос: ", query)
+          console.log("Поисковый запрос: ", searchParams.get("query"))
           setDocumentsFound(searchResponse.documentsFound)
           setTags(getUpdatedTags(searchResponse.tags).sort((a, b) => b.documentCount - a.documentCount || a.name.localeCompare(b.name)));
           setDocuments(searchResponse.documents);
         });
     };
-  
-    const getTagQueryparams = (tags) => {
-      let queryString = ''
-      tags?.map(tag => queryString += `&tags[]=${tag.name}`)
-      return queryString
-    }
   
     const getUpdatedTags = (foundTags) => {
       let selectedTags = tags?.map((tag) => (tag.selected ? tag : undefined)).filter((tag) => tag)
@@ -76,9 +88,20 @@ const Search = () => {
     };
   
     const handleTagClick = (tag) => {
-      let tagName = tag.name;
+      if (searchParams.getAll("tags[]").findIndex(querystringTag => querystringTag === tag.name) === -1) {
+        setSearchParams(prev => {
+          prev.append("tags[]", tag.name)
+          return prev
+        })
+      } else {
+        setSearchParams(prev => {
+          prev.delete("tags[]", tag.name)
+          return prev
+        })
+      }
+
       let indexOfCurrentTag = tags.findIndex(
-        (stateTag) => stateTag.name === tagName
+        (stateTag) => stateTag.name === tag.name
       );
   
       const getUpdatedTag = () => {
@@ -93,21 +116,31 @@ const Search = () => {
           selected: true,
         };
       };
+
       setTags([
         ...tags.slice(0, indexOfCurrentTag),
         getUpdatedTag(),
         ...tags.slice(indexOfCurrentTag + 1),
       ]);
-      setSelectedTags(tags?.filter(tag => tag.selected))
+
     };
+
+    const handleQuerystringChange = (queryString) => {
+      if (queryString[queryString.length - 1] === "-" || queryString[queryString.length - 1] === " ") {
+        return
+      }
+      let selectedTags = searchParams.getAll("tags[]")
+      setSearchParams({"tags[]": selectedTags, query: queryString})
+    }
   
     return (
       <>
         <TextField
           id="outlined-basic"
           label="Поисковый запрос"
+          defaultValue={searchParams.get("query")}
           variant="outlined"
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => handleQuerystringChange(e.target.value)}
           sx={{ width: "100%" }}
         />
         <Typography>
