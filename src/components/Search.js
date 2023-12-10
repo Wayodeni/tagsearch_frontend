@@ -8,30 +8,11 @@ import { useSearchParams } from 'react-router-dom';
 
 const Search = () => {
     const [tags, setTags] = useState([]);
-    // const [selectedTags, setSelectedTags] = useState([]);
     const [documents, setDocuments] = useState([]);
     const [documentsFound, setDocumentsFound] = useState(0);
     const [searchParams, setSearchParams] = useSearchParams();
     const emptyTagNamePlaceholder = "Без тегов";
-  
-    // useEffect(() => setSelectedTags(prevState => {
-    //   let selectedTags = tags?.filter(tag => tag.selected)
-    //   console.log("the selected tags: ===================", selectedTags)
-    //   if ((JSON.stringify(prevState) !== JSON.stringify(selectedTags)) && selectedTags) {
-    //     return selectedTags
-    //   }
-    //   console.log("the prev state tags: ===================", prevState)
-    //   return prevState
-    // }), [tags])
-    // useEffect(() => setSearchParams(params => {
-    //   if (selectedTags.length > 0) {
-    //     params.delete("tags[]")
-    //     selectedTags.map(tag => {
-    //       params.append("tags[]", tag.name)
-    //     })
-    //   }
-    //   return params
-    // }), [selectedTags])
+
     useEffect(() => {fetchSearchResults()}, [searchParams])
   
     const fetchSearchResults = () => {
@@ -47,44 +28,9 @@ const Search = () => {
         .then((searchResponse) => {
           console.log("Поисковый запрос: ", searchParams.get("query"))
           setDocumentsFound(searchResponse.documentsFound)
-          setTags(getUpdatedTags(searchResponse.tags).sort((a, b) => b.documentCount - a.documentCount || a.name.localeCompare(b.name)));
+          setTags(searchResponse.tags?.sort((a, b) => b.documentCount - a.documentCount || a.name.localeCompare(b.name)));
           setDocuments(searchResponse.documents);
         });
-    };
-  
-    const getUpdatedTags = (foundTags) => {
-      let selectedTags = tags?.map((tag) => (tag.selected ? tag : undefined)).filter((tag) => tag)
-      if (foundTags === undefined) {
-        console.log("foundTags===undefined")
-        return selectedTags?.map(tag => ({...tag, documentCount: 0}))
-      }
-  
-      console.log('Найденные теги:', foundTags, 'Выбранные теги:', selectedTags);
-  
-      if (selectedTags?.length > 0) {
-        let selectedInFound = selectedTags?.map((selectedTag) => foundTags?.find((tag) => tag.name === selectedTag.name)).filter(tag => tag);
-        console.log('Выбранные в найденных: ', selectedInFound);
-  
-        let selectedThatAreNotInFound = selectedTags?.map((selectedTag) => {
-          let selectedTagFoundInFoundTags = foundTags?.find((tag) => tag.name === selectedTag.name)
-          if (selectedTagFoundInFoundTags === undefined) {
-            return ({...selectedTag, documentCount: 0})
-          }
-        }).filter(tag => tag);
-        console.log('Выбранные, которых нет в найденных: ', selectedThatAreNotInFound);
-  
-        let foundWithoutSelected = foundTags?.filter(foundTag => !selectedInFound.includes(foundTag))
-        console.log('Найденные без выбранных: ', foundWithoutSelected);
-  
-        let selectedInFoundWithSelectedDefined = selectedInFound.map(tag => ({...tag, selected: true}))
-        console.log('Выбранные в найденных с добавленным selected: ', selectedInFoundWithSelectedDefined);
-  
-        let foundWithSelected = foundWithoutSelected?.concat(selectedThatAreNotInFound).concat(selectedInFoundWithSelectedDefined)
-  
-        return foundWithSelected
-      }
-  
-      return foundTags;
     };
   
     const handleTagClick = (tag) => {
