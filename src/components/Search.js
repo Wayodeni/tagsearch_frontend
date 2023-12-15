@@ -90,7 +90,7 @@ const Search = () => {
       queryString[queryString.length - 1] === "-" ||
       queryString[queryString.length - 1] === " "
     ) {
-      return;
+      return queryString.slice(0, -1);
     }
     let selectedTags = searchParams.getAll("tags[]");
     setSearchParams({ "tags[]": selectedTags, query: queryString });
@@ -162,7 +162,7 @@ const Search = () => {
                       : "default"
                   }
                   label={
-                    tag.name +
+                    (tag.name ? tag.name : emptyTagNamePlaceholder) +
                     ` (${
                       tags.find((stateTag) => stateTag.name === tag.name)
                         ?.documentCount
