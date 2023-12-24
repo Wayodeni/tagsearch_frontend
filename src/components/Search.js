@@ -19,6 +19,8 @@ const Search = () => {
   const currentPageQueryParamName = "pageNumber";
   const querystringQueryParamName = "query";
 
+  const apiURL = "http://192.168.12.22:8081/api/v1/";
+
   useEffect(() => {
     setCurrentPage(parseInt(searchParams.get(currentPageQueryParamName)));
   }, []);
@@ -28,12 +30,9 @@ const Search = () => {
   }, [searchParams]);
 
   const fetchSearchResults = () => {
-    fetch(
-      `http://192.168.12.22:8081/api/v1/search?${searchParams.toString()}`,
-      {
+    fetch(`${apiURL}search?${searchParams.toString()}`, {
         method: "GET",
-      }
-    )
+    })
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -100,6 +99,26 @@ const Search = () => {
       getUpdatedTag(),
       ...tags.slice(indexOfCurrentTag + 1),
     ]);
+  };
+
+  const handleTagDelete = (tag) => {
+    fetch(`${apiURL}tags/${tag.id}`, {
+      method: "DELETE",
+    })
+      .then((response) => {
+        if (response.ok) {
+          let indexOfTagToRemove = tags.findIndex(
+            (stateTag) => stateTag.name === tag.name
+          );
+          setTags([
+            ...tags.slice(0, indexOfTagToRemove),
+            ...tags.slice(indexOfTagToRemove + 1),
+          ]);
+          fetchSearchResults();
+        }
+        throw response.text();
+      })
+      .catch((text) => console.log(text));
   };
 
   const handleQuerystringChange = (queryString) => {
@@ -175,6 +194,7 @@ const Search = () => {
                 tag.documentCount
               })`}
               onClick={() => handleTagClick(tag)}
+              onDelete={tag.selected ? undefined : () => handleTagDelete(tag)}
             ></Chip>
           </>
         ))}
