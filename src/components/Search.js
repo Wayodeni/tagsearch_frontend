@@ -1,9 +1,9 @@
-import * as React from "react";
 import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
 import Chip from "@mui/material/Chip";
-import { useState, useEffect } from "react";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import * as React from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 const Search = () => {
@@ -18,9 +18,12 @@ const Search = () => {
   }, [searchParams]);
 
   const fetchSearchResults = () => {
-    fetch(`http://localhost:8080/api/v1/search?${searchParams.toString()}`, {
-      method: "GET",
-    })
+    fetch(
+      `http://192.168.12.22:8081/api/v1/search?${searchParams.toString()}`,
+      {
+        method: "GET",
+      }
+    )
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -86,10 +89,8 @@ const Search = () => {
   };
 
   const handleQuerystringChange = (queryString) => {
-    if (
-      queryString[queryString.length - 1] === "-" ||
-      queryString[queryString.length - 1] === " "
-    ) {
+    const SYMBOLS_TO_REMOVE = '+-=&|><!(){}[]^"~*?:\\/ ';
+    if (SYMBOLS_TO_REMOVE.includes(queryString[queryString.length - 1])) {
       return queryString.slice(0, -1);
     }
     let selectedTags = searchParams.getAll("tags[]");
