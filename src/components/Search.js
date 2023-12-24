@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Pagination from "@mui/material/Pagination";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
@@ -10,8 +11,17 @@ const Search = () => {
   const [tags, setTags] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [documentsFound, setDocumentsFound] = useState(0);
+  const [pagesCount, setPagesCount] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [currentPage, setCurrentPage] = useState(0);
   const emptyTagNamePlaceholder = "Без тегов";
+  const tagsQueryParamName = "tags[]";
+  const currentPageQueryParamName = "pageNumber";
+  const querystringQueryParamName = "query";
+
+  useEffect(() => {
+    setCurrentPage(parseInt(searchParams.get(currentPageQueryParamName)));
+  }, []);
 
   useEffect(() => {
     fetchSearchResults();
@@ -40,26 +50,30 @@ const Search = () => {
           )
         );
         setDocuments(searchResponse.documents);
+        setPagesCount(searchResponse.pages);
+        if (searchResponse.requestPageIsOutOfBounds) {
+          handlePageChange(null, searchResponse.pages);
+        }
       });
   };
 
   const handleTagClick = (tag) => {
     if (
       searchParams
-        .getAll("tags[]")
+        .getAll(tagsQueryParamName)
         .findIndex((querystringTag) => querystringTag === tag.name) === -1
     ) {
       setSearchParams((prev) => {
-        prev.append("tags[]", tag.name);
+        prev.append(tagsQueryParamName, tag.name);
         return prev;
       });
     } else {
       setSearchParams((prev) => {
         let allTagParams = prev
-          .getAll("tags[]")
+          .getAll(tagsQueryParamName)
           .filter((selectedTagName) => selectedTagName != tag.name);
-        prev.delete("tags[]");
-        allTagParams.map((tag) => prev.append("tags[]", tag));
+        prev.delete(tagsQueryParamName);
+        allTagParams.map((tag) => prev.append(tagsQueryParamName, tag));
         return prev;
       });
     }
@@ -93,8 +107,18 @@ const Search = () => {
     if (SYMBOLS_TO_REMOVE.includes(queryString[queryString.length - 1])) {
       return queryString.slice(0, -1);
     }
-    let selectedTags = searchParams.getAll("tags[]");
-    setSearchParams({ "tags[]": selectedTags, query: queryString });
+    setSearchParams((prev) => {
+      prev.set(querystringQueryParamName, queryString);
+      return prev;
+    });
+  };
+
+  const handlePageChange = (e, value) => {
+    setCurrentPage(value);
+    setSearchParams((prev) => {
+      prev.set(currentPageQueryParamName, value);
+      return prev;
+    });
   };
 
   return (
@@ -110,6 +134,29 @@ const Search = () => {
       <Typography>
         Найдено документов: {documentsFound} Тегов: {tags?.length}
       </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "space-around",
+        }}
+      >
+        <Pagination
+          count={pagesCount}
+          page={currentPage > 0 ? currentPage : 1}
+          onChange={(e, value) => handlePageChange(e, value)}
+          color="primary"
+          variant="outlined"
+          shape="rounded"
+          sx={{
+            mb: 2,
+            // width: 1,
+          }}
+          showFirstButton
+          showLastButton
+        />
+      </Box>
       <Box
         sx={{
           display: "flex",
