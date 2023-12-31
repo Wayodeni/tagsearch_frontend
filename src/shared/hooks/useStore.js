@@ -11,4 +11,6 @@ export const useStore = create((set) => ({
   setCurrentPage: (currentPage) => set({ currentPage }),
   documents: [],
   setDocuments: (documents) => set({ documents }),
+  searchRequestError: null,
+  setSearchRequestError: (searchRequestError) => set({ searchRequestError }),
 }));

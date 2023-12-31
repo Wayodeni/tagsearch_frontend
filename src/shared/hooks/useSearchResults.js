@@ -12,6 +12,7 @@ export const useSearchResults = () => {
     setDocumentsFound,
     setTags,
     setCurrentPage,
+    setSearchRequestError,
   } = useStore();
 
   const handlePageChange = (value) => {
@@ -27,7 +28,7 @@ export const useSearchResults = () => {
       `${process.env.REACT_APP_API_URL}/search?${searchParams.toString()}`,
       {
         method: "GET",
-      },
+      }
     )
       .then((response) => {
         if (response.ok) {
@@ -41,14 +42,17 @@ export const useSearchResults = () => {
         setTags(
           searchResponse.tags?.sort(
             (a, b) =>
-              b.documentCount - a.documentCount || a.name.localeCompare(b.name),
-          ),
+              b.documentCount - a.documentCount || a.name.localeCompare(b.name)
+          )
         );
         setDocuments(searchResponse.documents);
         setPagesCount(searchResponse.pages);
-        if (searchResponse.requestPageIsOutOfBounds) {
+        setSearchRequestError(null);
+        if (searchResponse.requestPageIsOutOfBounds)
           handlePageChange(searchResponse.pages);
-        }
+      })
+      .catch((e) => {
+        e.json().then((jsonError) => setSearchRequestError(jsonError));
       });
   };
 

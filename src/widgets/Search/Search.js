@@ -4,8 +4,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Document, Tag } from "./ui";
 import { usePageChange, useSearchResults, useStore } from "../../shared/hooks";
+import { Document, Tag } from "./ui";
 
 export const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,6 +18,7 @@ export const Search = () => {
     setCurrentPage,
     pagesCount,
     documentsFound,
+    searchRequestError,
   } = useStore();
   const fetchSearchResults = useSearchResults();
 
@@ -42,7 +43,12 @@ export const Search = () => {
     <>
       <TextField
         id="outlined-basic"
-        label="Поисковый запрос"
+        label={
+          searchRequestError
+            ? `Ошибка при выполнении поискового запроса: ${searchRequestError}`
+            : "Поисковый запрос"
+        }
+        error={searchRequestError ? true : undefined}
         defaultValue={searchParams.get("query")}
         variant="outlined"
         onChange={(e) => handleQuerystringChange(e.target.value)}
@@ -68,7 +74,6 @@ export const Search = () => {
           shape="rounded"
           sx={{
             mb: 2,
-            // width: 1,
           }}
           showFirstButton
           showLastButton
