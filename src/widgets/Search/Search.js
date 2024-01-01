@@ -1,4 +1,6 @@
+import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Pagination from "@mui/material/Pagination";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -91,6 +93,7 @@ export const Search = () => {
         {tags?.map((tag) => (
           <Tag key={tag.id} {...tag} />
         ))}
+        <Button endIcon={<AddIcon />}>Добавить тег</Button>
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column" }}>
         {documents?.map((document) => (
