@@ -9,14 +9,19 @@ import Box from "@mui/system/Box";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useStore } from "../../../shared/hooks";
-export const Tag = ({ id, selected, name: initialName, documentCount }) => {
-  const emptyTagNamePlaceholder = "Без тегов";
+export const Tag = ({
+  id,
+  selected,
+  name: initialName,
+  documentCount,
+  initialEditable = false,
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tagsQueryParamName = "tags[]";
 
   const { tags, setTags } = useStore();
 
-  const [editable, setEditable] = useState(false);
+  const [editable, setEditable] = useState(initialEditable);
   const [name, setName] = useState(initialName);
 
   const handleTagDelete = () => {
@@ -118,15 +123,16 @@ export const Tag = ({ id, selected, name: initialName, documentCount }) => {
       <Chip
         color={selected ? "success" : "default"}
         label={`${initialName} ${documentCount}`}
-        onClick={handleTagClick}
-        onDelete={selected ? undefined : handleTagDelete}
+        onClick={documentCount ? handleTagClick : undefined}
+        variant={documentCount ? undefined : "outlined"}
+        onDelete={!selected ? handleTagDelete : undefined}
         deleteIcon={<DeleteIcon />}
       />
-      {selected ? undefined : (
+      {!selected ? (
         <IconButton onClick={() => setEditable(!editable)}>
           <EditIcon></EditIcon>
         </IconButton>
-      )}
+      ) : undefined}
     </Box>
   );
 };

@@ -1,13 +1,11 @@
-import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Pagination from "@mui/material/Pagination";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { usePageChange, useSearchResults, useStore } from "../../shared/hooks";
-import { Document, Tag } from "./ui";
+import { AddTagModal, Document, Tag } from "./ui";
 
 export const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -45,10 +43,11 @@ export const Search = () => {
     <>
       <TextField
         id="outlined-basic"
-        label={
+        label="Поисковый запрос"
+        helperText={
           searchRequestError
             ? `Ошибка при выполнении поискового запроса: ${searchRequestError}`
-            : "Поисковый запрос"
+            : undefined
         }
         error={searchRequestError ? true : undefined}
         defaultValue={searchParams.get("query")}
@@ -93,7 +92,7 @@ export const Search = () => {
         {tags?.map((tag) => (
           <Tag key={tag.id} {...tag} />
         ))}
-        <Button endIcon={<AddIcon />}>Добавить тег</Button>
+        <AddTagModal></AddTagModal>
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column" }}>
         {documents?.map((document) => (
