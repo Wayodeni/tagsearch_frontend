@@ -93,7 +93,7 @@ export const Tag = ({
           ]);
           setEditable(!editable);
         } else {
-          throw response.json();
+          throw response;
         }
       })
       .catch((e) => e.json().then((errorMsg) => alert(errorMsg)));
